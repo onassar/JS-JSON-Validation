@@ -1,4 +1,4 @@
-[
+var sample = [
     {
         "validator": ["StringValidator", "notEmpty"],
         "failsafe": false,
@@ -59,4 +59,4 @@
 
         ]
     }
-]
+];

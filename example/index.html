@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>(imagination)</title>
+        <title>JSON Validation Example</title>
         <link href="http://meyerweb.com/eric/tools/css/reset/reset.css" rel="stylesheet" type="text/css" />
         <script type="text/javascript">
         //<![CDATA[
@@ -32,17 +32,39 @@
         <![endif]-->
     </head>
     <body>
+        <h1>Form</h1>
         <form action="#" method="get">
-            <input type="text" name="sample" id="sample" title="Sample" />
+            Email <input type="text" name="email" id="email" />
+            Name <input type="text" name="name" id="name" />
         </form>
         <script type="text/javascript">
         //<![CDATA[
             queue.push(function() {
+                (new Form(
+                    $$('form').shift(),
+                    {
+                        postsubmit: function() {
+                            alert('Form has been submitted.');
+                        },
+                        presubmit: function(callback) {
+                            alert('Form is about to be submitted.');
+                            callback();
+                        }
+                    }
+                ));
             });
             ready(function() {
                 js(
                     [
-                        'https://ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js'
+                        // dependency for example
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/example/schema.json.js',
+
+                        // logic
+                        'https://ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js',
+                        'https://raw.github.com/onassar/JS-Form/master/Form.class.js',
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/SchemaValidator.class.js',
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/NumberValidator.class.js',
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/StringValidator.class.js'
                     ],
                     function() {
                         log('pre: ', (new Date()).getTime() - start);
