@@ -38,6 +38,7 @@
         </form>
         <script type="text/javascript">
         //<![CDATA[
+            var validator;
             queue.push(function() {
                 var form = (new SmartForm(
                     $$('form').shift(),
@@ -48,7 +49,7 @@
                         presubmit: function(callback) {
 
                             // validation object
-                            var inputs = this.getInputs(),
+                            var inputs = this.getInputs();
                                 validator = (new SchemaValidator(sample, inputs));
 
                             // validate
@@ -57,7 +58,7 @@
                                     callback();
                                 },
                                 function() {
-                                    alert(this.getErrors().shift().error.message);
+                                    alert(this.getErrors()[0].error.message);
                                     form.enable();
                                 }
                             );
