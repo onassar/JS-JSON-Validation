@@ -7,7 +7,20 @@ if (typeof MooTools === 'undefined') {
 /**
  * SchemaValidator
  * 
- * Manages the validation of a schema against it's defined rules.
+ * Manages the validation of a schema against its defined rules. The flow is
+ * unique, in that it wraps all checks in proxies to allow for ajax validation
+ * calls to be managed within the same flow as iterative/stack-based checks (in
+ * addition to recursively on sub-rule arrays).
+ * 
+ * This means you can have rule #1 check a strings length, rule #2 check if the
+ * string (let's assume it's a username) is already taken (by checking on the
+ * backend against a db), and rule #3 check to ensure it doesn't contain any
+ * invalid characters. All this would be done one-after-another.
+ * 
+ * Note that the default case for <funnel> and <failsafe> properties is that
+ * they are set to <false> (eg. the rule shouldn't act as a funnel unless
+ * explicitely set; the rule shouldn't act as a failsafe [whereby subsequent
+ * rules fail] unless explcitely set).
  * 
  * @author  Oliver Nassar <onassar@gmail.com>
  * @notes   Supports ajax-validation through usage of the <Ajax.class.js>
@@ -52,7 +65,8 @@ var SchemaValidator = new Class({
      * initialize
      * 
      * @public
-     * @param  Object schema
+     * @param  Array schema array containing rules on how a form ought to be
+     *         validated
      * @param  Object inputs
      * @return void
      */
@@ -76,17 +90,23 @@ var SchemaValidator = new Class({
     _failed: function(rule, callback) {
 
         // if the rule wasn't meant to act as a funnel for further rules
-        if (rule.funnel === false) {
+        if (
+            typeof rule.funnel === 'undefined'
+            || rule.funnel === false
+        ) {
 
             // add to error array
             this.addError(rule)
         }
 
         /**
-         * If it's not a failsafe (in which case futher checks shouldn't be
+         * If it's not a failsafe (in which case further checks shouldn't be
          * performed)
          */
-        if (rule.failsafe === false) {
+        if (
+            typeof rule.failsafe === 'undefined'
+            || rule.failsafe === false
+        ) {
             callback();
         }
     },
@@ -106,8 +126,13 @@ var SchemaValidator = new Class({
      */
     _getParams: function(rule) {
 
-        // clone the params (since being modified)
-        var params = Array.clone(rule.params),
+        /**
+         * Clone the params (since being modified); note that it may not be
+         * provided, so a condition is made here to be an empty array despite
+         * the Array.clone method allowing undefined properties to be cloned (
+         * which results in an empty array, anyway)
+         */
+        var params = Array.clone(rule.params || []),
             self = this,
             match;
 
@@ -146,14 +171,14 @@ var SchemaValidator = new Class({
      * @return void
      */
     addError: function(rule) {
-        this.errors.push(rule.error);
+        this.errors.push(rule);
     },
 
     /**
      * asynchronous
      * 
      * Returns whether or not a rule should be processed asynchronously by
-     * checking whether the function argument signature contains success/failure
+     * checking whether the function-argument signature contains success/failure
      * functions.
      * 
      * @public
@@ -179,19 +204,25 @@ var SchemaValidator = new Class({
      */
     check: function(rules, callback) {
 
-        // check rule
-        var self = this,
-            rule = rules.shift();
-        if (rule) {
+        // if there are rules
+        if (rules.length > 0) {
 
-            /**
-             * Nest callback for recursive rule checking (aka. check the next
-             * rule)
-             */
-            callback = this.check.pass([rules, callback], this);
+            // check rule
+            var self = this,
+                rule = rules.shift();
 
-            // check rule, passing in callback to act recursively
-            this.checkRule(rule, callback);
+            // if a rule was found
+            if (rule) {
+
+                /**
+                 * Nest callback for recursive rule checking (aka. check the next
+                 * rule)
+                 */
+                callback = this.check.pass([rules, callback], this);
+
+                // check rule, passing in callback to act recursively
+                this.checkRule(rule, callback);
+            }
         }
         // no rules left
         else {
@@ -222,9 +253,16 @@ var SchemaValidator = new Class({
             self = this,
             success;
 
-        // set callback to take sub-rules into consideration, if they exist
+        /**
+         * fn
+         * 
+         * Callback to take sub-rules into consideration, if they exists.
+         * 
+         * @private
+         * @return  void
+         */
         var fn = function() {
-            self.check(rule.rules, callback);
+            self.check(rule.rules || [], callback);
         };
 
         // if it's an async check, push the success and failure callbacks
@@ -289,9 +327,9 @@ var SchemaValidator = new Class({
          */
         var callback = function() {
             if (this.errors.length === 0) {
-                success()
+                success.bind(this)()
             } else {
-                failure();
+                failure.bind(this)();
             }
         }.bind(this);
 
