@@ -129,8 +129,8 @@ var SchemaValidator = new Class({
         /**
          * Clone the params (since being modified); note that it may not be
          * provided, so a condition is made here to be an empty array despite
-         * the Array.clone method allowing undefined properties to be cloned (
-         * which results in an empty array, anyway)
+         * the Array.clone method allowing undefined properties to be cloned
+         * (which results in an empty array, anyway)
          */
         var params = Array.clone(rule.params || []),
             self = this,
@@ -147,13 +147,18 @@ var SchemaValidator = new Class({
             match = param.match && param.match(/^{([a-zA-Z0-9-\._]+)}$/);
 
             /**
-             * Match found (eg. the parameter should be replaced with an input's
-             * value.
+             * Match found (eg. the parameter should be replaced with an inputs
+             * value)
              */
             if (match) {
                 if (typeof self.inputs[match[1]] !== 'undefined') {
                     params[x] = self.inputs[match[1]];
                 } else {
+/*
+                    throw new Error(
+                        'Input with name *' + param + '* could not be found.'
+                    );
+*/
                     params[x] = null;
                 }
             }
@@ -207,9 +212,8 @@ var SchemaValidator = new Class({
         // if there are rules
         if (rules.length > 0) {
 
-            // check rule
-            var self = this,
-                rule = rules.shift();
+            // grab first rule in array of rules
+            var rule = rules.shift();
 
             // if a rule was found
             if (rule) {
