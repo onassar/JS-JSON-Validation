@@ -32,6 +32,17 @@ var StringValidator = (function() {
         },
 
         /**
+         * empty
+         * 
+         * @public
+         * @param  String str
+         * @return Boolean
+         */
+        empty: function(str) {
+            return str === '';
+        },
+
+        /**
          * emptyOrEmail
          * 
          * @public
@@ -39,7 +50,7 @@ var StringValidator = (function() {
          * @return Boolean
          */
         emptyOrEmail: function(str) {
-            return str.length === 0 || StringValidator.email(str);
+            return StringValidator.empty(str) || StringValidator.email(str);
         },
 
         /**
@@ -50,7 +61,7 @@ var StringValidator = (function() {
          * @return Boolean
          */
         emptyOrUrl: function(str) {
-            return str.length === 0 || StringValidator.url(str);
+            return StringValidator.empty(str) || StringValidator.url(str);
         },
 
         /**
@@ -78,6 +89,18 @@ var StringValidator = (function() {
         },
 
         /**
+         * maxLength
+         * 
+         * @public
+         * @param  String str
+         * @param  Number length
+         * @return Boolean
+         */
+        maxLength: function(str, length) {
+            return str.length() <= length;
+        },
+
+        /**
          * notEmpty
          * 
          * @public
@@ -85,7 +108,7 @@ var StringValidator = (function() {
          * @return Boolean
          */
         notEmpty: function(str) {
-            return str !== '';
+            return StringValidator.empty(str) === false;
         },
 
         /**
