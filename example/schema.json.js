@@ -28,3 +28,23 @@ var sample = [
     }
 ];
 
+// failsafe
+var sample = [
+    {
+        "validator": ["StringValidator", "notEmpty"],
+        "params": ["{email}"],
+        "failsafe": true,
+        "error": {
+            "input": "email",
+            "message": "Please enter your email."
+        }
+    },
+    {
+        "validator": ["StringValidator", "email"],
+        "params": ["{email}"],
+        "error": {
+            "input": "email",
+            "message": "Please enter a valid email."
+        }
+    }
+];
