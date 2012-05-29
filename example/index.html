@@ -35,20 +35,32 @@
         <h1>Form</h1>
         <form action="#" method="get">
             Email <input type="text" name="email" id="email" />
-            Name <input type="text" name="name" id="name" />
         </form>
         <script type="text/javascript">
         //<![CDATA[
             queue.push(function() {
-                (new Form(
+                var form = (new SmartForm(
                     $$('form').shift(),
                     {
                         postsubmit: function() {
                             alert('Form has been submitted.');
                         },
                         presubmit: function(callback) {
-                            alert('Form is about to be submitted.');
-                            callback();
+
+                            // validation object
+                            var inputs = this.getInputs(),
+                                validator = (new SchemaValidator(sample, inputs));
+
+                            // validate
+                            validator.validate(
+                                function() {
+                                    callback();
+                                },
+                                function() {
+                                    alert(this.getErrors().shift().error.message);
+                                    form.enable();
+                                }
+                            );
                         }
                     }
                 ));
@@ -57,14 +69,24 @@
                 js(
                     [
                         // dependency for example
-                        'https://raw.github.com/onassar/JS-JSON-Validation/master/example/schema.json.js',
+/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/example/schema.json.js', */
+                        'schema.json.js',
 
                         // logic
                         'https://ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js',
+/*
                         'https://raw.github.com/onassar/JS-Form/master/Form.class.js',
-                        'https://raw.github.com/onassar/JS-JSON-Validation/master/SchemaValidator.class.js',
-                        'https://raw.github.com/onassar/JS-JSON-Validation/master/NumberValidator.class.js',
-                        'https://raw.github.com/onassar/JS-JSON-Validation/master/StringValidator.class.js'
+                        'https://raw.github.com/onassar/JS-Form/master/SmartForm.class.js',
+*/
+                        '../../JS-Form/Form.class.js',
+                        '../../JS-Form/SmartForm.class.js',
+
+/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/SchemaValidator.class.js', */
+                        '../SchemaValidator.class.js',
+/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/NumberValidator.class.js', */
+                        '../NumberValidator.class.js',
+/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/StringValidator.class.js' */
+                        '../StringValidator.class.js'
                     ],
                     function() {
                         log('pre: ', (new Date()).getTime() - start);
