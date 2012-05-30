@@ -44,7 +44,8 @@ var SchemaValidator = new Class({
      * _failsafed
      * 
      * Boolean used to track whether a <failsafe> rule has failed, in order to
-     * prevent subsequent rules from being run.
+     * prevent subsequent rules from being run (within that
+     * rule-stack/recursive-iteration).
      * 
      * @protected
      * @var       Boolean
@@ -135,11 +136,11 @@ var SchemaValidator = new Class({
                  * recursive
                  * 
                  * Nests the callback for recursive rule checking (aka. check
-                 * the next rule), taking into consideration whether the a rule
+                 * the next rule), taking into consideration whether a rule
                  * marked as <failsafe> has failed.
                  * 
                  * In this case, further recursive rule checking should not be
-                 * performed, but only for this rules iteration.
+                 * performed, but only for this rules iteration/rule-stack.
                  * 
                  * @private
                  * @return  void
@@ -155,6 +156,8 @@ var SchemaValidator = new Class({
                         // perform callback without subsequent iterative calls
                         callback();
                     } else {
+
+                        // performs subsequent rule checking
                         this._check.pass([rules, callback], this)();
                     }
                 }.bind(this);
@@ -256,23 +259,15 @@ var SchemaValidator = new Class({
             this._addFailedRule(rule)
         }
 
-        /**
-         * If it's not a failsafe (in which case further checks shouldn't be
-         * performed)
-         */
-        if (
-            typeof rule.failsafe === 'undefined'
-            || rule.failsafe === false
-        ) {
-            callback();
-        }
-        // otherwise the rule had the failsafe boolean set
-        else {
+        // if the rule has the failsafe boolean set
+        if (rule.failsafe) {
 
             // set the <_failsafed> property for this recursion
             this._failsafed = true;
-            callback();
         }
+
+        // filter callback (regardless of <failsafed> property)
+        callback();
     },
 
     /**
