@@ -30,6 +30,17 @@ if (typeof MooTools === 'undefined') {
 var SchemaValidator = new Class({
 
     /**
+     * _failed
+     * 
+     * Array storing the rules that have failed after the validation process has
+     * been finished.
+     * 
+     * @protected
+     * @var       Array
+     */
+    _failed: [],
+
+    /**
      * _failsafed
      * 
      * Boolean used to track whether a <failsafe> rule has failed, in order to
@@ -41,14 +52,15 @@ var SchemaValidator = new Class({
     _failsafed: false,
 
     /**
-     * _previous
+     * _inputs
      * 
-     * 
+     * An array of the form's inputs, for usage with passing values to the
+     * executing validation methods.
      * 
      * @protected
-     * @var       Function
+     * @var       Object
      */
-    _previous: function() {},
+    _inputs: {},
 
     /**
      * _rules
@@ -59,28 +71,12 @@ var SchemaValidator = new Class({
     _rules: [],
 
     /**
-     * errors
+     * _schema
      * 
-     * @public
-     * @var    Array
+     * @protected
+     * @var       Array
      */
-    errors: [],
-
-    /**
-     * inputs
-     * 
-     * @public
-     * @var    Object
-     */
-    inputs: {},
-
-    /**
-     * schema
-     * 
-     * @public
-     * @var    Array
-     */
-    schema: [],
+    _schema: [],
 
     /**
      * initialize
@@ -92,23 +88,163 @@ var SchemaValidator = new Class({
      * @return void
      */
     initialize: function(schema, inputs) {
-        this.schema = schema;
-        this.inputs = inputs;
+        this._schema = schema;
+        this._inputs = inputs;
     },
 
     /**
-     * _failed
+     * _asynchronous
      * 
-     * Method that handles an error failing. It takes into account whether a
-     * rule ought to act as a funnel for a sub-rule, as well as whether a rule
-     * should act as a failsafe (meaning no further rules should be run).
+     * Returns whether or not a rule should be processed asynchronously by
+     * checking whether the function-argument signature contains success/failure
+     * functions.
+     * 
+     * @protected
+     * @param     Object rule
+     * @return    Boolean
+     */
+    _asynchronous: function(rule) {
+        var fn = window[rule.validator[0]][rule.validator[1]],
+            callbacks = fn.toString().contains('success, failure');
+        return callbacks;
+    },
+
+    /**
+     * _check
+     * 
+     * Recursively checks one rule at a time. Acts as a wrapper or proxy for the
+     * <_checkRule> method below, in order to execute the passed in callback.
+     * 
+     * @protected
+     * @param     Array rules
+     * @param     Function callback
+     * @return    void
+     */
+    _check: function(rules, callback) {
+
+        // if there are rules
+        if (rules.length > 0) {
+
+            // grab first rule in array of rules
+            var rule = rules.shift();
+
+            // if a rule was found
+            if (rule) {
+
+                /**
+                 * recursive
+                 * 
+                 * Nests the callback for recursive rule checking (aka. check
+                 * the next rule), taking into consideration whether the a rule
+                 * marked as <failsafe> has failed.
+                 * 
+                 * In this case, further recursive rule checking should not be
+                 * performed, but only for this rules iteration.
+                 * 
+                 * @private
+                 * @return  void
+                 */
+                var recursive = function() {
+
+                    // if a <failsafed> boolean has been set
+                    if (this._failsafed) {
+
+                        // reset the <_failsafed> boolean
+                        this._failsafed = false;
+
+                        // perform callback without subsequent iterative calls
+                        callback();
+                    } else {
+                        this._check.pass([rules, callback], this)();
+                    }
+                }.bind(this);
+
+
+                // check rule, passing in callback to act recursively
+                this._checkRule(rule, recursive);
+            }
+        }
+        // no rules left
+        else {
+            callback();
+        }
+    },
+
+    /**
+     * _checkRule
+     * 
+     * Performs a rule-check by either wrapping a non-ajax based rule with a
+     * success/failure function, or by passing in two extra functions to an ajax
+     * check to allow it to recursively call the next check. This method also
+     * retrieves the parameters (since they may be templated off of form-data),
+     * and sets the callback function to recusrively check the rule's sub-rules
+     * array for fine-grained validation (aka. nested validation/conditional
+     * checking).
      * 
      * @protected
      * @param     Object rule
      * @param     Function callback
      * @return    void
      */
-    _failed: function(rule, callback) {
+    _checkRule: function(rule, callback) {
+
+        // grab the parsed/templated parameters; set self; measure success
+        var params = this._getParams(rule),
+            self = this,
+            success;
+
+        /**
+         * alternate
+         * 
+         * Alternate callback to take sub-rules into consideration, if they
+         * exists.
+         * 
+         * @private
+         * @return  void
+         */
+        var alternate = function() {
+            self._check(rule.rules || [], callback);
+        };
+
+        // if it's an async check, push the success and failure callbacks
+        if (this._asynchronous(rule)) {
+            params.push(alternate, this._filter.pass([rule, alternate], this));
+            window[rule.validator[0]][rule.validator[1]].apply(this, params);
+        }
+        /**
+         * Otherwise run the test within the stack, and fire off appropriate
+         * callback.
+         */
+        else {
+            success = window[rule.validator[0]][rule.validator[1]].apply(
+                this,
+                params
+            );
+            if (success) {
+                alternate();
+            } else {
+                this._filter(rule, callback);
+            }
+        }
+    },
+
+    /**
+     * _filter
+     * 
+     * Method that handles a rule failing, and filters it depending on it's
+     * <funnel> and/or <failsafe> property.
+     * 
+     * If it was marked as a <funnel>, it prevents the rule from being added to
+     * the failed rules array. If it is marked as a <failsafe>, it ends the
+     * current rule-stack (no further rules within that recursive-iteration will
+     * be checked).
+     * 
+     * @protected
+     * @param     Object rule
+     * @param     Function callback
+     * @return    void
+     */
+    _filter: function(rule, callback) {
 
         // if the rule wasn't meant to act as a funnel for further rules
         if (
@@ -117,7 +253,7 @@ var SchemaValidator = new Class({
         ) {
 
             // add to error array
-            this.addFailedRule(rule)
+            this._addFailedRule(rule)
         }
 
         /**
@@ -179,8 +315,8 @@ var SchemaValidator = new Class({
              * value)
              */
             if (match) {
-                if (typeof self.inputs[match[1]] !== 'undefined') {
-                    params[x] = self.inputs[match[1]];
+                if (typeof self._inputs[match[1]] !== 'undefined') {
+                    params[x] = self._inputs[match[1]];
                 } else {
 /*
                     throw new Error(
@@ -197,152 +333,14 @@ var SchemaValidator = new Class({
     },
 
     /**
-     * addFailedRule
+     * _addFailedRule
      * 
-     * @public
-     * @param Object rule
-     * @return void
+     * @protected
+     * @param     Object rule
+     * @return    void
      */
-    addFailedRule: function(rule) {
-        this.errors.push(rule);
-    },
-
-    /**
-     * asynchronous
-     * 
-     * Returns whether or not a rule should be processed asynchronously by
-     * checking whether the function-argument signature contains success/failure
-     * functions.
-     * 
-     * @public
-     * @param  Object rule
-     * @return Boolean
-     */
-    asynchronous: function(rule) {
-        var fn = window[rule.validator[0]][rule.validator[1]],
-            callbacks = fn.toString().contains('success, failure');
-        return callbacks;
-    },
-
-    /**
-     * check
-     * 
-     * Recursively checks one rule at a time. Acts as a wrapper or proxy for the
-     * <checkRule> method below, in order to execute the passed in callback.
-     * 
-     * @public
-     * @param  Array rules
-     * @param  Function callback
-     * @return void
-     */
-    check: function(rules, callback) {
-
-        // if there are rules
-        if (rules.length > 0) {
-
-            // grab first rule in array of rules
-            var rule = rules.shift();
-
-            // if a rule was found
-            if (rule) {
-
-/* callback = this.check.pass([rules, callback], this); */
-
-                /**
-                 * recursive
-                 * 
-                 * Nests the callback for recursive rule checking (aka. check
-                 * the next rule), taking into consideration whether the a rule
-                 * marked as <failsafe> has failed.
-                 * 
-                 * In this case, further recursive rule checking should not be
-                 * performed, but only for this rules iteration.
-                 * 
-                 * @public
-                 * @return void
-                 */
-                var recursive = function() {
-
-                    // if a <failsafed> boolean has been set
-                    if (this._failsafed) {
-
-                        // reset the <_failsafed> boolean
-                        this._failsafed = false;
-
-                        // perform callback without subsequent iterative calls
-                        callback();
-                    } else {
-                        this.check.pass([rules, callback], this)();
-                    }
-                }.bind(this);
-
-
-                // check rule, passing in callback to act recursively
-                this.checkRule(rule, recursive);
-            }
-        }
-        // no rules left
-        else {
-            callback();
-        }
-    },
-
-    /**
-     * checkRule
-     * 
-     * Performs a rule-check by either wrapping a non-ajax based rule with a
-     * success/failure function, or by passing in two extra functions to an ajax
-     * check to allow it to recursively call the next check. This method also
-     * retrieves the parameters (since they may be templated off of form-data),
-     * and sets the callback function to recusrively check the rule's sub-rules
-     * array for fine-grained validation (aka. nested validation/conditional
-     * checking).
-     * 
-     * @public
-     * @param  Object rule
-     * @param  Function callback
-     * @return void
-     */
-    checkRule: function(rule, callback) {
-
-        // grab the parsed/templated parameters; set self; measure success
-        var params = this._getParams(rule),
-            self = this,
-            success;
-
-        /**
-         * alternate
-         * 
-         * Alternate callback to take sub-rules into consideration, if they
-         * exists.
-         * 
-         * @private
-         * @return  void
-         */
-        var alternate = function() {
-            self.check(rule.rules || [], callback);
-        };
-
-        // if it's an async check, push the success and failure callbacks
-        if (this.asynchronous(rule)) {
-            params.push(alternate, this._failed.pass([rule, alternate], this));
-            window[rule.validator[0]][rule.validator[1]].apply(this, params);
-        }
-        /**
-         * Otherwise run the test within the stack, and fire off appropriate
-         * callback.
-         */
-        else {
-            success = window[rule.validator[0]][rule.validator[1]].apply(
-                this,
-                params
-            );
-            if (success) {
-                alternate();
-            } else {
-                this._failed(rule, callback);
-            }
-        }
+    _addFailedRule: function(rule) {
+        this._failed.push(rule);
     },
 
     /**
@@ -354,7 +352,7 @@ var SchemaValidator = new Class({
      * @return Array
      */
     getFailedRules: function() {
-        return this.errors;
+        return this._failed;
     },
 
     /**
@@ -374,7 +372,7 @@ var SchemaValidator = new Class({
          * Clone schema (as rules) since they are shifted off during 
          * process.
          */
-        this._rules = Array.clone(this.schema);
+        this._rules = Array.clone(this._schema);
 
         /**
          * callback
@@ -386,7 +384,7 @@ var SchemaValidator = new Class({
          * @return  void
          */
         var callback = function() {
-            if (this.errors.length === 0) {
+            if (this._failed.length === 0) {
                 success.bind(this)()
             } else {
                 failure.bind(this)();
@@ -394,6 +392,6 @@ var SchemaValidator = new Class({
         }.bind(this);
 
         // begin recursive rule checking
-        this.check(this._rules, callback);
+        this._check(this._rules, callback);
     }
 });
