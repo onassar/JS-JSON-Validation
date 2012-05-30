@@ -1,6 +1,13 @@
 
-// email required
-var sample = [
+// object to store validation schemas
+var schemas = {};
+
+/**
+ * Simple
+ *
+ * A simple schema that requires an email to be specified in the <email> input.
+ */
+schemas.simple = [
     {
         "validator": ["StringValidator", "email"],
         "params": ["{email}"],
@@ -11,8 +18,16 @@ var sample = [
     }
 ];
 
-// no string required, but if provided, must be an email (funnel example)
-var sample = [
+/**
+ * Funnel
+ * 
+ * A schema whereby if the <email> input is not empty, it then performs a check
+ * against it to ensure that it's a valid email. It funnels the second request
+ * through the first.
+ * 
+ * If the first fails, the form has still been successfully validated.
+ */
+schemas.funnel = [
     {
         "validator": ["StringValidator", "notEmpty"],
         "params": ["{email}"],
@@ -28,12 +43,21 @@ var sample = [
     }
 ];
 
-// failsafe
-var sample = [
+/**
+ * Failsafe
+ * 
+ * Schema whereby the first rule is marked as <failsafe>. This implies that if
+ * the rule does not pass, subsequent rules in that iteration should not be
+ * checked.
+ * 
+ * The method <getFailedRules> will only return an array of failed rules up
+ * until one which failed and is marked as a <failsafe>.
+ */
+schemas.failsafe = [
     {
         "validator": ["StringValidator", "notEmpty"],
-        "params": ["{email}"],
         "failsafe": true,
+        "params": ["{email}"],
         "error": {
             "input": "email",
             "message": "Please enter your email."
@@ -44,13 +68,63 @@ var sample = [
         "params": ["{email}"],
         "error": {
             "input": "email",
-            "message": "Please enter a valid email."
+            "message": "Please enter a valid email address."
         }
     }
 ];
 
-// full schema with failsafe, sub-rule and funneling validation
-var sample = [
+/**
+ * Nested
+ * 
+ * A nested schema example which highlights the failsafing option, but
+ * demonstrates that rules within a seperate rule-chain/iteration are not
+ * affected by a failsafe rule which failed.
+ */
+schemas.nested = [
+    {
+        "validator": ["StringValidator", "notEmpty"],
+        "params": ["{email}"],
+        "rules": [
+            {
+                "validator": ["StringValidator", "email"],
+                "failsafe": true,
+                "params": ["{email}"],
+                "error": {
+                    "input": "email",
+                    "message": "Please enter a valid email address."
+                }
+            },
+            {
+                "validator": ["StringValidator", "equals"],
+                "params": ["{email}", "oliver.nassar@facebook.com"],
+                "error": {
+                    "input": "email",
+                    "message": "Please enter the email address: oliver.nassar@facebook.com"
+                }
+            }
+        ],
+        "error": {
+            "input": "email",
+            "message": "Please enter your email."
+        }
+    },
+    {
+        "validator": ["StringValidator", "equals"],
+        "params": ["{email}", "onassar@gmail.com"],
+        "error": {
+            "input": "email",
+            "message": "Please enter the email address: onassar@gmail.com"
+        }
+    }
+];
+
+/**
+ * Full
+ * 
+ * A real-world example of a full schema (based on a comment form) which
+ * includes the failsafe, sub-rule and funnel rule checks.
+ */
+schemas.full = [
     {
         "validator": ["StringValidator", "notEmpty"],
         "failsafe": true,

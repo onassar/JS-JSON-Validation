@@ -50,7 +50,9 @@
 
                             // validation object
                             var inputs = this.getInputs();
-                                validator = (new SchemaValidator(sample, inputs));
+                                validator = (new SchemaValidator(
+                                    schemas.nested, inputs
+                                ));
 
                             // validate
                             validator.validate(
@@ -58,7 +60,7 @@
                                     callback();
                                 },
                                 function() {
-                                    alert(this.getErrors()[0].error.message);
+                                    alert(this.getFailedRules()[0].error.message);
                                     form.enable();
                                 }
                             );

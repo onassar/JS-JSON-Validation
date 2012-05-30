@@ -30,7 +30,28 @@ if (typeof MooTools === 'undefined') {
 var SchemaValidator = new Class({
 
     /**
-     * _rules. 
+     * _failsafed
+     * 
+     * Boolean used to track whether a <failsafe> rule has failed, in order to
+     * prevent subsequent rules from being run.
+     * 
+     * @protected
+     * @var       Boolean
+     */
+    _failsafed: false,
+
+    /**
+     * _previous
+     * 
+     * 
+     * 
+     * @protected
+     * @var       Function
+     */
+    _previous: function() {},
+
+    /**
+     * _rules
      * 
      * @protected
      * @var       Array
@@ -38,7 +59,7 @@ var SchemaValidator = new Class({
     _rules: [],
 
     /**
-     * errors. 
+     * errors
      * 
      * @public
      * @var    Array
@@ -46,7 +67,7 @@ var SchemaValidator = new Class({
     errors: [],
 
     /**
-     * inputs. 
+     * inputs
      * 
      * @public
      * @var    Object
@@ -54,7 +75,7 @@ var SchemaValidator = new Class({
     inputs: {},
 
     /**
-     * schema. 
+     * schema
      * 
      * @public
      * @var    Array
@@ -96,7 +117,7 @@ var SchemaValidator = new Class({
         ) {
 
             // add to error array
-            this.addError(rule)
+            this.addFailedRule(rule)
         }
 
         /**
@@ -107,6 +128,13 @@ var SchemaValidator = new Class({
             typeof rule.failsafe === 'undefined'
             || rule.failsafe === false
         ) {
+            callback();
+        }
+        // otherwise the rule had the failsafe boolean set
+        else {
+
+            // set the <_failsafed> property for this recursion
+            this._failsafed = true;
             callback();
         }
     },
@@ -169,13 +197,13 @@ var SchemaValidator = new Class({
     },
 
     /**
-     * addError. 
+     * addFailedRule
      * 
      * @public
      * @param Object rule
      * @return void
      */
-    addError: function(rule) {
+    addFailedRule: function(rule) {
         this.errors.push(rule);
     },
 
@@ -218,14 +246,39 @@ var SchemaValidator = new Class({
             // if a rule was found
             if (rule) {
 
+/* callback = this.check.pass([rules, callback], this); */
+
                 /**
-                 * Nest callback for recursive rule checking (aka. check the next
-                 * rule)
+                 * recursive
+                 * 
+                 * Nests the callback for recursive rule checking (aka. check
+                 * the next rule), taking into consideration whether the a rule
+                 * marked as <failsafe> has failed.
+                 * 
+                 * In this case, further recursive rule checking should not be
+                 * performed, but only for this rules iteration.
+                 * 
+                 * @public
+                 * @return void
                  */
-                callback = this.check.pass([rules, callback], this);
+                var recursive = function() {
+
+                    // if a <failsafed> boolean has been set
+                    if (this._failsafed) {
+
+                        // reset the <_failsafed> boolean
+                        this._failsafed = false;
+
+                        // perform callback without subsequent iterative calls
+                        callback();
+                    } else {
+                        this.check.pass([rules, callback], this)();
+                    }
+                }.bind(this);
+
 
                 // check rule, passing in callback to act recursively
-                this.checkRule(rule, callback);
+                this.checkRule(rule, recursive);
             }
         }
         // no rules left
@@ -258,20 +311,21 @@ var SchemaValidator = new Class({
             success;
 
         /**
-         * fn
+         * alternate
          * 
-         * Callback to take sub-rules into consideration, if they exists.
+         * Alternate callback to take sub-rules into consideration, if they
+         * exists.
          * 
          * @private
          * @return  void
          */
-        var fn = function() {
+        var alternate = function() {
             self.check(rule.rules || [], callback);
         };
 
         // if it's an async check, push the success and failure callbacks
         if (this.asynchronous(rule)) {
-            params.push(fn, this._failed.pass([rule, fn], this));
+            params.push(alternate, this._failed.pass([rule, alternate], this));
             window[rule.validator[0]][rule.validator[1]].apply(this, params);
         }
         /**
@@ -284,7 +338,7 @@ var SchemaValidator = new Class({
                 params
             );
             if (success) {
-                fn();
+                alternate();
             } else {
                 this._failed(rule, callback);
             }
@@ -292,12 +346,14 @@ var SchemaValidator = new Class({
     },
 
     /**
-     * getErrors. Returns the array of errors.
+     * getFailedRules
+     * 
+     * Returns the array of rules that failed.
      * 
      * @public
      * @return Array
      */
-    getErrors: function() {
+    getFailedRules: function() {
         return this.errors;
     },
 
