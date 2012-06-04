@@ -54,6 +54,4 @@ var smartform = (new SmartForm(
         }
     }
 ));
-
-
 ````
