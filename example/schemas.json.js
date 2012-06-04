@@ -178,7 +178,7 @@ schemas.full = [
                 "validator": ["StringValidator", "email"],
                 "params": ["{email}"],
                 "error": {
-                    "input": "comment",
+                    "input": "email",
                     "message": "Email must be provided if you wish to receive email updates."
                 }
             }
