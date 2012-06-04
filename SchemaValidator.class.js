@@ -17,10 +17,10 @@ if (typeof MooTools === 'undefined') {
  * backend against a db), and rule #3 check to ensure it doesn't contain any
  * invalid characters. All this would be done one-after-another.
  * 
- * Note that the default case for <funnel> and <failsafe> properties is that
- * they are set to <false> (eg. the rule shouldn't act as a funnel unless
- * explicitely set; the rule shouldn't act as a failsafe [whereby subsequent
- * rules fail] unless explcitely set).
+ * Note that the default case for <funnel> (eg. the rule shouldn't act as a
+ * funnel for subrules) and <failsafe> (eg. the rule shouldn't act as a failsafe
+ * [whereby subsequent rules aren't tested]) properties is that they are set to
+ * <false>.
  * 
  * @author  Oliver Nassar <onassar@gmail.com>
  * @notes   Supports ajax-validation through usage of the <Ajax.class.js>
