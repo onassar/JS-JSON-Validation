@@ -44,19 +44,19 @@ schemas.funnel = [
 ];
 
 /**
- * Failsafe
+ * Blocking
  * 
- * Schema whereby the first rule is marked as <failsafe>. This implies that if
+ * Schema whereby the first rule is marked as <blocking>. This implies that if
  * the rule does not pass, subsequent rules in that iteration should not be
  * checked.
  * 
  * The method <getFailedRules> will only return an array of failed rules up
- * until one which failed and is marked as a <failsafe>.
+ * until one which failed and is marked as with a <blocking> value of <true>.
  */
-schemas.failsafe = [
+schemas.blocking = [
     {
         "validator": ["StringValidator", "notEmpty"],
-        "failsafe": true,
+        "blocking": true,
         "params": ["{email}"],
         "error": {
             "input": "email",
@@ -76,9 +76,9 @@ schemas.failsafe = [
 /**
  * Nested
  * 
- * A nested schema example which highlights the failsafing option, but
+ * A nested schema example which highlights the blocking option, but
  * demonstrates that rules within a seperate rule-chain/iteration are not
- * affected by a failsafe rule which failed.
+ * affected by a blocking rule which failed.
  */
 schemas.nested = [
     {
@@ -87,7 +87,7 @@ schemas.nested = [
         "rules": [
             {
                 "validator": ["StringValidator", "email"],
-                "failsafe": true,
+                "blocking": true,
                 "params": ["{email}"],
                 "error": {
                     "input": "email",
@@ -122,12 +122,12 @@ schemas.nested = [
  * Full
  * 
  * A real-world example of a full schema (based on a comment form) which
- * includes the failsafe, sub-rule and funnel rule checks.
+ * includes the blocking, sub-rule and funnel rule checks.
  */
 schemas.full = [
     {
         "validator": ["StringValidator", "notEmpty"],
-        "failsafe": true,
+        "blocking": true,
         "params": ["{name}"],
         "error": {
             "input": "name",

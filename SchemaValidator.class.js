@@ -17,10 +17,10 @@ if (typeof MooTools === 'undefined') {
  * backend against a db), and rule #3 check to ensure it doesn't contain any
  * invalid characters. All this would be done one-after-another.
  * 
- * Note that the default case for <funnel> (eg. the rule shouldn't act as a
- * funnel for subrules) and <failsafe> (eg. the rule shouldn't act as a failsafe
- * [whereby subsequent rules aren't tested]) properties is that they are set to
- * <false>.
+ * Note that the default case for <funnel> (eg. whether the rule should act as a
+ * funnel for subrules) and <blocking> (eg. whether the rule should block
+ * additional rules in the rule-stack from being checked upon the current rule
+ * failing validation) properties are that they are set to <false>.
  * 
  * @author  Oliver Nassar <onassar@gmail.com>
  * @notes   Supports ajax-validation through usage of the <Ajax.class.js>
@@ -41,16 +41,16 @@ var SchemaValidator = new Class({
     _failed: [],
 
     /**
-     * _failsafed
+     * _blocked
      * 
-     * Boolean used to track whether a <failsafe> rule has failed, in order to
+     * Boolean used to track whether a <blocking> rule has failed, in order to
      * prevent subsequent rules from being run (within that
      * rule-stack/recursive-iteration).
      * 
      * @protected
      * @var       Boolean
      */
-    _failsafed: false,
+    _blocked: false,
 
     /**
      * _inputs
@@ -137,7 +137,7 @@ var SchemaValidator = new Class({
                  * 
                  * Nests the callback for recursive rule checking (aka. check
                  * the next rule), taking into consideration whether a rule
-                 * marked as <failsafe> has failed.
+                 * marked as <blocking> has failed.
                  * 
                  * In this case, further recursive rule checking should not be
                  * performed, but only for this rules iteration/rule-stack.
@@ -147,11 +147,11 @@ var SchemaValidator = new Class({
                  */
                 var recursive = function() {
 
-                    // if a <failsafed> boolean has been set
-                    if (this._failsafed) {
+                    // if a <blocking> rule has failed
+                    if (this._blocked) {
 
-                        // reset the <_failsafed> boolean
-                        this._failsafed = false;
+                        // reset the <_blocked> boolean
+                        this._blocked = false;
 
                         // perform callback without subsequent iterative calls
                         callback();
@@ -235,10 +235,10 @@ var SchemaValidator = new Class({
      * _filter
      * 
      * Method that handles a rule failing, and filters it depending on it's
-     * <funnel> and/or <failsafe> property.
+     * <funnel> and/or <blocking> properties.
      * 
      * If it was marked as a <funnel>, it prevents the rule from being added to
-     * the failed rules array. If it is marked as a <failsafe>, it ends the
+     * the failed rules array. If it is marked as <blocking>, it ends the
      * current rule-stack (no further rules within that recursive-iteration will
      * be checked).
      * 
@@ -259,14 +259,14 @@ var SchemaValidator = new Class({
             this._addFailedRule(rule)
         }
 
-        // if the rule has the failsafe boolean set
-        if (rule.failsafe) {
+        // if the rule has the <blocking> boolean set
+        if (rule.blocking) {
 
-            // set the <_failsafed> property for this recursion
-            this._failsafed = true;
+            // set the <_blocked> property for this recursion
+            this._blocked = true;
         }
 
-        // filter callback (regardless of <failsafed> property)
+        // filter callback (regardless of the instances <blocked> property)
         callback();
     },
 

@@ -101,8 +101,8 @@ var schema = [
     }
 ];</pre>
         <hr />
-        <h1>Failsafe</h1>
-        <form action="#" method="get" id="failsafe">
+        <h1>Blocking</h1>
+        <form action="#" method="get" id="blocking">
             <div>Email <input type="text" name="email" /></div>
             <div><input type="submit" /></div>
         </form>
@@ -110,7 +110,7 @@ var schema = [
 var schema = [
     {
         "validator": ["StringValidator", "notEmpty"],
-        "failsafe": true,
+        "blocking": true,
         "params": ["{email}"],
         "error": {
             "input": "email",
@@ -140,7 +140,7 @@ var schema = [
         "rules": [
             {
                 "validator": ["StringValidator", "email"],
-                "failsafe": true,
+                "blocking": true,
                 "params": ["{email}"],
                 "error": {
                     "input": "email",
@@ -184,7 +184,7 @@ var schema = [
 var schema = [
     {
         "validator": ["StringValidator", "notEmpty"],
-        "failsafe": true,
+        "blocking": true,
         "params": ["{name}"],
         "error": {
             "input": "name",
@@ -255,7 +255,7 @@ var schema = [
              */
             queue.push(function() {
                 var forms = [
-                    $('simple'), $('funnel'), $('failsafe'), $('nested'),
+                    $('simple'), $('funnel'), $('blocking'), $('nested'),
                     $('full')
                 ];
                 forms.each(function(form) {
