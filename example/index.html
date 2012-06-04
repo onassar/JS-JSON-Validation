@@ -47,35 +47,132 @@
                 background-color: #ccc;
                 margin: 20px 0;
             }
+            pre {
+                color: #334;
+                overflow: auto;
+                padding: 8px 12px;
+                line-height: 20px;
+                margin: 12px 0;
+                border: 1px solid #EAEAEA;
+                background-color: #F8F8F8;
+                border-radius: 3px;
+                font-family: 'Bitstream Vera Sans Mono','Courier',monospace;
+                font-size: 11px;
+            }
         </style>
     </head>
     <body>
         <h1>Simple</h1>
-        <form action="#" method="get">
+        <form action="#" method="get" id="simple">
             <div>Email <input type="text" name="email" /></div>
             <div><input type="submit" /></div>
         </form>
+        <pre>
+var schema = [
+    {
+        "validator": ["StringValidator", "email"],
+        "params": ["{email}"],
+        "error": {
+            "input": "email",
+            "message": "Please enter your email."
+        }
+    }
+];</pre>
         <hr />
         <h1>Funnel</h1>
-        <form action="#" method="get">
+        <form action="#" method="get" id="funnel">
             <div>Email <input type="text" name="email" /></div>
             <div><input type="submit" /></div>
         </form>
+        <pre>
+var schema = [
+    {
+        "validator": ["StringValidator", "notEmpty"],
+        "params": ["{email}"],
+        "funnel": true,
+        "rules": [{
+            "validator": ["StringValidator", "email"],
+            "params": ["{email}"],
+            "error": {
+                "input": "email",
+                "message": "Please enter your email."
+            }
+        }]
+    }
+];</pre>
         <hr />
         <h1>Failsafe</h1>
-        <form action="#" method="get">
+        <form action="#" method="get" id="failsafe">
             <div>Email <input type="text" name="email" /></div>
             <div><input type="submit" /></div>
         </form>
+        <pre>
+var schema = [
+    {
+        "validator": ["StringValidator", "notEmpty"],
+        "failsafe": true,
+        "params": ["{email}"],
+        "error": {
+            "input": "email",
+            "message": "Please enter your email."
+        }
+    },
+    {
+        "validator": ["StringValidator", "email"],
+        "params": ["{email}"],
+        "error": {
+            "input": "email",
+            "message": "Please enter a valid email address."
+        }
+    }
+];</pre>
         <hr />
         <h1>Nested</h1>
-        <form action="#" method="get">
+        <form action="#" method="get" id="nested">
             <div>Email <input type="text" name="email" /></div>
             <div><input type="submit" /></div>
         </form>
+        <pre>
+var schema = [
+    {
+        "validator": ["StringValidator", "notEmpty"],
+        "params": ["{email}"],
+        "rules": [
+            {
+                "validator": ["StringValidator", "email"],
+                "failsafe": true,
+                "params": ["{email}"],
+                "error": {
+                    "input": "email",
+                    "message": "Please enter a valid email address."
+                }
+            },
+            {
+                "validator": ["StringValidator", "equals"],
+                "params": ["{email}", "oliver.nassar@facebook.com"],
+                "error": {
+                    "input": "email",
+                    "message": "Please enter the email address: oliver.nassar@facebook.com"
+                }
+            }
+        ],
+        "error": {
+            "input": "email",
+            "message": "Please enter your email."
+        }
+    },
+    {
+        "validator": ["StringValidator", "equals"],
+        "params": ["{email}", "onassar@gmail.com"],
+        "error": {
+            "input": "email",
+            "message": "Please enter the email address: onassar@gmail.com"
+        }
+    }
+];</pre>
         <hr />
         <h1>Full</h1>
-        <form action="#" method="get">
+        <form action="#" method="get" id="full">
             <div>Name <input type="text" name="name" /></div>
             <div>Email <input type="text" name="email" /></div>
             <div>Website <input type="text" name="website" /></div>
@@ -83,38 +180,113 @@
             <div>Updates <input type="checkbox" name="updates" /></div>
             <div><input type="submit" /></div>
         </form>
+        <pre>
+var schema = [
+    {
+        "validator": ["StringValidator", "notEmpty"],
+        "failsafe": true,
+        "params": ["{name}"],
+        "error": {
+            "input": "name",
+            "message": "Please enter your name."
+        }
+    },
+    {
+        "validator": ["StringValidator", "emptyOrEmail"],
+        "params": ["{email}"],
+        "error": {
+            "input": "email",
+            "message": "Please enter a valid email address."
+        }
+    },
+    {
+        "validator": ["StringValidator", "emptyOrUrl"],
+        "params": ["{website}"],
+        "error": {
+            "input": "website",
+            "message": "Please enter a valid website url."
+        }
+    },
+    {
+        "validator": ["StringValidator", "empty"],
+        "params": ["{comment}"],
+        "rules": [
+            {
+                "validator": ["StringValidator", "maxLength"],
+                "params": ["{comment}", 250],
+                "error": {
+                    "input": "comment",
+                    "message": "Comments need to be limited to 250 characters."
+                }
+            }
+
+        ],
+        "error": {
+            "input": "comment",
+            "message": "Please enter a comment."
+        }
+    },
+    {
+        "validator": ["StringValidator", "equals"],
+        "funnel": true,
+        "params": ["{updates}", "true"],
+        "rules": [
+            {
+                "validator": ["StringValidator", "email"],
+                "params": ["{email}"],
+                "error": {
+                    "input": "comment",
+                    "message": "Email must be provided if you wish to receive email updates."
+                }
+            }
+
+        ]
+    }
+];</pre>
         <script type="text/javascript">
         //<![CDATA[
-            var validator;
+
+            /**
+             * This function loops through an array of form ids in oder to save
+             * some space and keep the source clean. It simple loops through
+             * each form, sets it up as a <SmartForm> object, and passes it's
+             * respective schema into a <SchemaValidator> instance during the
+             * validation process.
+             */
             queue.push(function() {
-                var form = (new SmartForm(
-                    $$('form').shift(),
-                    {
-                        postsubmit: function() {
-                            alert('Form has been submitted.');
-                        },
-                        presubmit: function(callback) {
-
-                            // validation object
-                            var inputs = this.getInputs();
-                                validator = (new SchemaValidator(
-                                    schemas.nested, inputs
-                                ));
-
-                            // validate
-                            validator.validate(
-                                function() {
-                                    callback();
-                                },
-                                function() {
-                                    alert(this.getFailedRules()[0].error.message);
-                                    form.enable();
-                                }
-                            );
+                var forms = ['simple', 'funnel', 'failsafe', 'nested', 'full'];
+                forms.each(function(form) {
+                    var smartform = (new SmartForm(
+                        $(form),
+                        {
+                            postsubmit: function() {
+                                alert('Form has been submitted.');
+                            },
+                            presubmit: function(callback) {
+    
+                                // validation object
+                                var inputs = this.getInputs(),
+                                    validator = (new SchemaValidator(
+                                        schemas[form], inputs
+                                    ));
+    
+                                // validate
+                                validator.validate(
+                                    function() {
+                                        callback();
+                                    },
+                                    function() {
+                                        alert(this.getFailedRules()[0].error.message);
+                                        smartform.enable();
+                                    }
+                                );
+                            }
                         }
-                    }
-                ));
+                    ));
+                });
             });
+
+            // boot all the dependencies (off github); run queued functions
             ready(function() {
                 js(
                     [
