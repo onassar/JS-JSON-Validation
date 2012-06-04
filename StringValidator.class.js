@@ -100,7 +100,7 @@ var StringValidator = (function() {
          */
         maxLength: function(str, length) {
             return typeof str === 'string'
-                && str.length() <= length;
+                && str.length <= length;
         },
 
         /**
