@@ -30,11 +30,58 @@
         <!--[if lt IE 9]>
         <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
+        <style type="text/css">
+            body {
+                font-family: Arial;
+                padding: 40px;
+                font-size: 14px;
+            }
+            h1 {
+                font-size: 1.2em;
+                padding: 0 0 8px;
+            }
+            hr {
+                line-height: 1px;
+                height: 1px;
+                border: none;
+                background-color: #ccc;
+                margin: 20px 0;
+            }
+        </style>
     </head>
     <body>
-        <h1>Form</h1>
+        <h1>Simple</h1>
         <form action="#" method="get">
-            Email <input type="text" name="email" id="email" />
+            <div>Email <input type="text" name="email" /></div>
+            <div><input type="submit" /></div>
+        </form>
+        <hr />
+        <h1>Funnel</h1>
+        <form action="#" method="get">
+            <div>Email <input type="text" name="email" /></div>
+            <div><input type="submit" /></div>
+        </form>
+        <hr />
+        <h1>Failsafe</h1>
+        <form action="#" method="get">
+            <div>Email <input type="text" name="email" /></div>
+            <div><input type="submit" /></div>
+        </form>
+        <hr />
+        <h1>Nested</h1>
+        <form action="#" method="get">
+            <div>Email <input type="text" name="email" /></div>
+            <div><input type="submit" /></div>
+        </form>
+        <hr />
+        <h1>Full</h1>
+        <form action="#" method="get">
+            <div>Name <input type="text" name="name" /></div>
+            <div>Email <input type="text" name="email" /></div>
+            <div>Website <input type="text" name="website" /></div>
+            <div>Comment <textarea name="comment"></textarea></div>
+            <div>Updates <input type="checkbox" name="updates" /></div>
+            <div><input type="submit" /></div>
         </form>
         <script type="text/javascript">
         //<![CDATA[
@@ -71,25 +118,13 @@
             ready(function() {
                 js(
                     [
-                        // dependency for example
-/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/example/schemas.json.js', */
-                        'schemas.json.js',
-
-                        // logic
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/example/schemas.json.js',
                         'https://ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js',
-/*
                         'https://raw.github.com/onassar/JS-Form/master/Form.class.js',
                         'https://raw.github.com/onassar/JS-Form/master/SmartForm.class.js',
-*/
-                        '../../JS-Form/Form.class.js',
-                        '../../JS-Form/SmartForm.class.js',
-
-/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/SchemaValidator.class.js', */
-                        '../SchemaValidator.class.js',
-/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/NumberValidator.class.js', */
-                        '../NumberValidator.class.js',
-/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/StringValidator.class.js' */
-                        '../StringValidator.class.js'
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/SchemaValidator.class.js',
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/NumberValidator.class.js',
+                        'https://raw.github.com/onassar/JS-JSON-Validation/master/StringValidator.class.js'
                     ],
                     function() {
                         log('pre: ', (new Date()).getTime() - start);

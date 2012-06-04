@@ -152,7 +152,7 @@ schemas.full = [
     },
     {
         "validator": ["StringValidator", "empty"],
-        "params": ["{email}"],
+        "params": ["{comment}"],
         "rules": [
             {
                 "validator": ["StringValidator", "maxLength"],
