@@ -247,17 +247,20 @@ var schema = [
         //<![CDATA[
 
             /**
-             * This function loops through an array of form ids in oder to save
-             * some space and keep the source clean. It simple loops through
-             * each form, sets it up as a <SmartForm> object, and passes it's
-             * respective schema into a <SchemaValidator> instance during the
-             * validation process.
+             * This function loops through an array of form HTMLElements in
+             * order to keep the code clean. It simply loops through each node,
+             * sets it up within <SmartForm> object, and passes it's respective
+             * schema into a <SchemaValidator> instance during the validation
+             * process.
              */
             queue.push(function() {
-                var forms = ['simple', 'funnel', 'failsafe', 'nested', 'full'];
+                var forms = [
+                    $('simple'), $('funnel'), $('failsafe'), $('nested'),
+                    $('full')
+                ];
                 forms.each(function(form) {
                     var smartform = (new SmartForm(
-                        $(form),
+                        form,
                         {
                             postsubmit: function() {
                                 alert('Form has been submitted.');
@@ -267,7 +270,7 @@ var schema = [
                                 // validation object
                                 var inputs = this.getInputs(),
                                     validator = (new SchemaValidator(
-                                        schemas[form], inputs
+                                        schemas[form.get('id')], inputs
                                     ));
     
                                 // validate
@@ -276,7 +279,10 @@ var schema = [
                                         callback();
                                     },
                                     function() {
-                                        alert(this.getFailedRules()[0].error.message);
+                                        var failed = this.getFailedRules()[0],
+                                            input = form.getElement('*[name=' + failed.error.input + ']');
+                                        alert(failed.error.message);
+                                        input.focus();
                                         smartform.enable();
                                     }
                                 );
@@ -296,7 +302,8 @@ var schema = [
                         'https://raw.github.com/onassar/JS-Form/master/SmartForm.class.js',
                         'https://raw.github.com/onassar/JS-JSON-Validation/master/SchemaValidator.class.js',
                         'https://raw.github.com/onassar/JS-JSON-Validation/master/NumberValidator.class.js',
-                        'https://raw.github.com/onassar/JS-JSON-Validation/master/StringValidator.class.js'
+/*                         'https://raw.github.com/onassar/JS-JSON-Validation/master/StringValidator.class.js' */
+                        '../StringValidator.class.js'
                     ],
                     function() {
                         log('pre: ', (new Date()).getTime() - start);
