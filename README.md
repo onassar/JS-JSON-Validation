@@ -4,7 +4,7 @@ JS-JSON-Validation is a front-end validation framework. It validates a form by
 evaluating a series of rules that are defined through an associated JSON file.
 
 ### Public Methods
-A `SchemaValidator` instance has only two publicly accessible methods:
+A `SchemaValidator` instance has two publicly accessible methods:
 
 - validate
 
