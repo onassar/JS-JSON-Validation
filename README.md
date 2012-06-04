@@ -24,7 +24,7 @@ Following this, the validator fires off the `validate` method which accepts two 
 
 ``` javascript
 
-var smartform = (new SmartForm(
+(new SmartForm(
     $('form-id'),
     {
         postsubmit: function() {
@@ -36,7 +36,8 @@ var smartform = (new SmartForm(
             var inputs = this.getInputs(),
                 validator = (new SchemaValidator(
                     schema, inputs
-                ));
+                )),
+                smartform = this;
 
             // validate
             validator.validate(

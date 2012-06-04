@@ -259,7 +259,7 @@ var schema = [
                     $('full')
                 ];
                 forms.each(function(form) {
-                    var smartform = (new SmartForm(
+                    (new SmartForm(
                         form,
                         {
                             postsubmit: function() {
@@ -271,8 +271,9 @@ var schema = [
                                 var inputs = this.getInputs(),
                                     validator = (new SchemaValidator(
                                         schemas[form.get('id')], inputs
-                                    ));
-    
+                                    )),
+                                    smartform = this;
+
                                 // validate
                                 validator.validate(
                                     function() {
