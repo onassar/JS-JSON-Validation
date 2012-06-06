@@ -1,18 +1,41 @@
 JS-JSON-Validation
 ===
 JS-JSON-Validation is a front-end validation framework. It validates a form by
-evaluating a series of rules that are defined through an associated JSON file.
+evaluating a series of rules that are defined through an associated JSON file (known as a `schema`).
+
+Designed to work seamlessly (but requiring implementation attention) with the [PHP-JSON-Validation](https://github.com/onassar/PHP-JSON-Validation) project.
+
+### In-depth Examples
+Which this page does contain an example, including the implementation of a [SmartForm](https://github.com/onassar/JS-Form) instance, I've prepared in-depth examples which can be seen here:  
+https://github.com/onassar/JS-JSON-Validation/tree/master/example
+
+
 
 ### Public Methods
-A `SchemaValidator` instance has two publicly accessible methods:
+A `SchemaValidator` instance has only two publicly accessible methods:
 
-- validate
+- `validate`
 
-  Requires `success` and `failure` functions to be passed in, which get respectively get executed after the form rules have been executed.
-- getFailedRules
+  Requires `success` and `failure` functions to be passed in, which respectively get executed after the form rules have been executed.
+- `getFailedRules`
 
-  Returns an array of all the rules which have failed. The result of this depends on whether a 'blocking' rule failed in a rule-stack (see below for more information on `blocking` rules).
-    
+  Returns an array of all the rules which have failed. The result of this depends on whether a `blocking` rule failed in a rule-stack (see below for more information on `blocking` rules).
+
+### Validation Pieces
+In order for a form to be successfully validated, it's schema must have all it's rules successfully validated (with the exception of rules which are marked as a `funnel`). This is a recursive requirement for all rules which themselves have sub-rules as well.
+
+There are 5 properties that are useful when creating rules for a schema. They are:
+
+* `validator` (required)
+* `params` (optional)
+* `blocking` (optional)
+* `rules` (optional)
+* `funnel` (optional)
+
+To save on redundancy, and keep documentation on them normalized, please check out the [Validation Pieces](https://github.com/onassar/PHP-JSON-Validation#validation-pieces) section on the [PHP-JSON-Validation](https://github.com/onassar/PHP-JSON-Validation) project.
+
+There is one other property, the `error` property, which while not used by the validation engine, is suggested in order to develop a more useful error validation flow.
+
 
 ### SmartForm Example
 
@@ -24,7 +47,7 @@ Following this, the validator fires off the `validate` method which accepts two 
 
 ``` javascript
 
-(new SmartForm(
+var smartform = (new SmartForm(
     $('form-id'),
     {
         postsubmit: function() {
@@ -36,8 +59,7 @@ Following this, the validator fires off the `validate` method which accepts two 
             var inputs = this.getInputs(),
                 validator = (new SchemaValidator(
                     schema, inputs
-                )),
-                smartform = this;
+                ));
 
             // validate
             validator.validate(
@@ -55,4 +77,6 @@ Following this, the validator fires off the `validate` method which accepts two 
         }
     }
 ));
+
+
 ````
