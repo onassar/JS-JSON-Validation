@@ -1,4 +1,3 @@
-
 // dependency checks
 if (typeof MooTools === 'undefined') {
     throw new Error('MooTools required.');
@@ -22,6 +21,7 @@ if (typeof MooTools === 'undefined') {
  * additional rules in the rule-stack from being checked upon the current rule
  * failing validation) properties are that they are set to <false>.
  * 
+ * @todo    Will have array-regex bug that server-side version did. Fix this.
  * @author  Oliver Nassar <onassar@gmail.com>
  * @notes   Supports ajax-validation through usage of the <Ajax.class.js>
  *          library
